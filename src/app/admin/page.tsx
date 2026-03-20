@@ -1,13 +1,32 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Users, IndianRupee, Activity, Trophy as Stadium } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  const [metrics, setMetrics] = useState({ totalBookings: 0, revenue: 0 });
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchAdminData = async () => {
+       const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(10);
+       if (bookings) {
+          setRecentBookings(bookings);
+          setMetrics({
+             totalBookings: bookings.length, // Should be count query in production
+             revenue: bookings.reduce((sum, b) => sum + Number(b.amount || 0), 0)
+          });
+       }
+    };
+    fetchAdminData();
+  }, [isAuthenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,21 +108,21 @@ export default function AdminPage() {
                   <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Activity className="w-6 h-6" /></div>
                   <div>
                     <p className="text-sm text-gray-500 font-medium">Total Bookings</p>
-                    <p className="text-2xl font-bold text-gray-900">1,245</p>
+                    <p className="text-2xl font-bold text-gray-900">{metrics.totalBookings}</p>
                   </div>
                </div>
                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
                   <div className="p-3 bg-green-100 text-green-600 rounded-lg"><IndianRupee className="w-6 h-6" /></div>
                   <div>
-                    <p className="text-sm text-gray-500 font-medium">Revenue (Today)</p>
-                    <p className="text-2xl font-bold text-gray-900">₹85,000</p>
+                    <p className="text-sm text-gray-500 font-medium">Revenue (Total)</p>
+                    <p className="text-2xl font-bold text-gray-900">₹{metrics.revenue}</p>
                   </div>
                </div>
                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
                   <div className="p-3 bg-purple-100 text-purple-600 rounded-lg"><Users className="w-6 h-6" /></div>
                   <div>
-                    <p className="text-sm text-gray-500 font-medium">Stadium Fill (KKR vs MI)</p>
-                    <p className="text-2xl font-bold text-gray-900">76%</p>
+                    <p className="text-sm text-gray-500 font-medium">Live Users</p>
+                    <p className="text-2xl font-bold text-gray-900">0</p>
                   </div>
                </div>
             </div>
@@ -114,30 +133,26 @@ export default function AdminPage() {
                   <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
                      <tr>
                         <th className="px-6 py-3">Booking ID</th>
-                        <th className="px-6 py-3">User</th>
-                        <th className="px-6 py-3">Match</th>
-                        <th className="px-6 py-3">Seats</th>
                         <th className="px-6 py-3">Amount</th>
                         <th className="px-6 py-3">Status</th>
+                        <th className="px-6 py-3">Date</th>
                      </tr>
                   </thead>
                   <tbody>
-                     <tr className="border-b border-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900">#BK-8374</td>
-                        <td className="px-6 py-4">user@example.com</td>
-                        <td className="px-6 py-4">KKR vs MI</td>
-                        <td className="px-6 py-4">Corporate Box C1-1</td>
-                        <td className="px-6 py-4">₹80</td>
-                        <td className="px-6 py-4"><span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Confirmed</span></td>
-                     </tr>
-                     <tr>
-                        <td className="px-6 py-4 font-medium text-gray-900">#BK-9321</td>
-                        <td className="px-6 py-4">test@gmail.com</td>
-                        <td className="px-6 py-4">GT vs LSG</td>
-                        <td className="px-6 py-4">Premium Stand R-12</td>
-                        <td className="px-6 py-4">₹150</td>
-                        <td className="px-6 py-4"><span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Confirmed</span></td>
-                     </tr>
+                     {recentBookings.length === 0 ? (
+                        <tr>
+                           <td colSpan={4} className="px-6 py-8 text-center text-gray-400">No real bookings found yet.</td>
+                        </tr>
+                     ) : (
+                        recentBookings.map((bk) => (
+                           <tr key={bk.id} className="border-b border-gray-50">
+                              <td className="px-6 py-4 font-medium text-gray-900">#{bk.id.split('-')[0]}</td>
+                              <td className="px-6 py-4">₹{bk.amount}</td>
+                              <td className="px-6 py-4"><span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">{bk.status}</span></td>
+                              <td className="px-6 py-4">{new Date(bk.created_at).toLocaleDateString()}</td>
+                           </tr>
+                        ))
+                     )}
                   </tbody>
                </table>
             </div>
