@@ -14,7 +14,7 @@ export default function AdminPage() {
     if (username === 'admin' && password === 'admin123') {
       setIsAuthenticated(true);
     } else {
-      alert("Invalid credentials. Use admin / admin123");
+      alert("Access Denied: Invalid credentials.");
     }
   };
 
@@ -22,7 +22,7 @@ export default function AdminPage() {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-64px)] bg-gray-50">
         <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 w-full max-w-sm">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Admin Login</h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-6 text-center">System Administration</h1>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>

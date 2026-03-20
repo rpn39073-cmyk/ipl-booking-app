@@ -28,7 +28,7 @@ export default function Navbar() {
           </div>
           <div className="flex items-center space-x-6 text-sm font-medium relative">
             <span className="text-gray-700 cursor-pointer">Mumbai</span>
-            <Link href="/admin" className="bg-[#F84464] text-white px-4 py-1.5 rounded text-xs font-semibold">Sign in</Link>
+            <Link href="/login" className="bg-[#F84464] text-white px-4 py-1.5 rounded text-xs font-semibold shadow-sm hover:bg-rose-600 transition">Sign in</Link>
             
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="focus:outline-none flex items-center">
               {isMenuOpen ? (
@@ -46,7 +46,7 @@ export default function Navbar() {
                   <p className="text-xs text-gray-500 font-medium">Log in to view your bookings and profile</p>
                 </div>
                 <div className="flex flex-col py-1">
-                  <Link href="/admin" className="px-5 py-3 hover:bg-gray-50 flex items-center space-x-4 text-gray-700 transition" onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/login" className="px-5 py-3 hover:bg-gray-50 flex items-center space-x-4 text-gray-700 transition" onClick={() => setIsMenuOpen(false)}>
                     <User className="w-5 h-5 text-gray-400" />
                     <span className="font-semibold">Login / Register</span>
                   </Link>
