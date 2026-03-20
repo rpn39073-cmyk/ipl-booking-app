@@ -17,7 +17,7 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
   // Mock upcoming matches
   const upcomingMatches = [
     {
-      id: 'match-123',
+      id: `${resolvedParams.slug}-vs-delhi-capitals`,
       title: `${teamName} vs Delhi Capitals`,
       date: 'Sun, 05 Apr',
       time: '07:30 PM',
@@ -26,7 +26,7 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
       isHome: true
     },
     {
-      id: 'match-124',
+      id: `rajasthan-royals-vs-${resolvedParams.slug}`,
       title: `Rajasthan Royals vs ${teamName}`,
       date: 'Wed, 08 Apr',
       time: '03:30 PM',
@@ -35,7 +35,7 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
       isHome: false
     },
     {
-      id: 'match-125',
+      id: `${resolvedParams.slug}-vs-chennai-super-kings`,
       title: `${teamName} vs Chennai Super Kings`,
       date: 'Sat, 11 Apr',
       time: '07:30 PM',

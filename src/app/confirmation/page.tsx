@@ -6,7 +6,7 @@ import { CheckCircle2, Ticket, Check } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
 export default function ConfirmationPage() {
-  const { selectedSeats } = useStore();
+  const { selectedSeats, selectedMatch } = useStore();
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [email, setEmail] = useState('cheifhu@outlook.com');
 
@@ -37,7 +37,11 @@ export default function ConfirmationPage() {
                <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-10 -translate-y-10"></div>
                <div>
                   <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mb-1">Match Details</p>
-                  <h2 className="text-lg font-bold leading-tight">Kolkata Knight Riders<br/>vs<br/>Mumbai Indians</h2>
+                  <h2 className="text-lg font-bold leading-tight">
+                    {selectedMatch ? selectedMatch.team_home : 'Kolkata Knight Riders'}
+                    <br/>vs<br/>
+                    {selectedMatch ? selectedMatch.team_away : 'Mumbai Indians'}
+                  </h2>
                </div>
                <Ticket className="w-12 h-12 text-yellow-400 opacity-80" strokeWidth={1.5} />
             </div>

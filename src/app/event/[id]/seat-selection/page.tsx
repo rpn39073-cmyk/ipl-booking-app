@@ -62,7 +62,24 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
   ];
 
   const [selectedStand, setSelectedStand] = useState(stands.find(s => s.id === 'sw')!);
-  const { selectedSeats } = useStore();
+  const { selectedSeats, setSelectedMatch, selectedMatch } = useStore();
+  
+  const idStr = resolvedParams.id;
+  let title = "Kolkata Knight Riders vs Mumbai Indians";
+  if (idStr.includes('-vs-')) {
+    const formatTeam = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    title = `${formatTeam(idStr.split('-vs-')[0])} vs ${formatTeam(idStr.split('-vs-')[1])}`;
+  }
+
+  useEffect(() => {
+    setSelectedMatch({
+       id: idStr,
+       team_home: title.split(' vs ')[0] || 'Kolkata Knight Riders',
+       team_away: title.split(' vs ')[1] || 'Mumbai Indians',
+       date_time: "Sun 29 Mar 2026",
+       stadium: "EDEN GARDENS"
+    });
+  }, [idStr, title, setSelectedMatch]);
 
   useEffect(() => {
     const channel = supabase.channel('seats-updates')
@@ -87,8 +104,8 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
               <ChevronLeft className="w-6 h-6 text-gray-700" />
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 leading-tight">Kolkata Knight Riders vs Mumbai Indians</h1>
-              <p className="text-xs text-gray-500">EDEN GARDENS | 29 Mar, 07:30 PM</p>
+              <h1 className="text-lg font-bold text-gray-900 leading-tight">{title}</h1>
+              <p className="text-xs text-gray-500">{selectedMatch?.stadium || "EDEN GARDENS"} | 29 Mar, 07:30 PM</p>
             </div>
           </div>
           <div className="text-sm font-semibold text-gray-900">

@@ -98,7 +98,7 @@ export default function Home() {
                 <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                   <span className="font-bold text-gray-900">₹50 <span className="text-xs text-gray-500 font-normal">onwards</span></span>
                   <Link 
-                    href="/event/match-123"
+                    href="/event/kolkata-knight-riders-vs-mumbai-indians"
                     className="bg-[#F84464] hover:bg-rose-600 text-white px-5 py-2 rounded-md transition font-semibold text-sm shadow-md flex items-center space-x-1 group"
                   >
                     <span>Book Tickets</span>

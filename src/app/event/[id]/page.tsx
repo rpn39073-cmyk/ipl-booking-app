@@ -3,9 +3,16 @@ import { Calendar, Clock, MapPin, Languages, Info, AlertTriangle } from 'lucide-
 
 export default async function EventDetails({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
+  const idStr = resolvedParams.id;
+  let title = "Kolkata Knight Riders vs Mumbai Indians";
+  if (idStr.includes('-vs-')) {
+    const formatTeam = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    title = `${formatTeam(idStr.split('-vs-')[0])} vs ${formatTeam(idStr.split('-vs-')[1])}`;
+  }
+
   // Mock data for the event
   const event = {
-    title: "Kolkata Knight Riders vs Mumbai Indians",
+    title: title,
     date: "Sun 29 Mar 2026",
     time: "07:30 PM",
     duration: "5 Hours",
