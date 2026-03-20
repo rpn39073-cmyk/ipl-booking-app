@@ -1,0 +1,1 @@
+"use client";\n\nimport React from 'react';\n\ninterface Stand {\n  id: string;\n  name: string;\n  color: string;\n  price: number;\n  path: string;\n}\n\n// Basic wrapper to satisfy next component requirements if we use SVG paths in future. \nexport default function Stadium() { return null; }
