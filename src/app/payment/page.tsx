@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, QrCode } from 'lucide-react';
+import { ChevronLeft, QrCode, ShieldCheck } from 'lucide-react';
+import Script from 'next/script';
 import { useStore } from '@/store/useStore';
 
 export default function PaymentPage() {
@@ -12,25 +13,47 @@ export default function PaymentPage() {
   
   const totalAmount = selectedSeats.length > 0 ? selectedSeats.length * 80 : 80;
 
-  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<{type: 'info'|'success'|'error', message: string} | null>(null);
 
-  useEffect(() => {
-  }, []);
-
-  const handleUpiClick = (app: string) => {
-    if (app === 'Google Pay' || app === 'Other') {
-      setPaymentStatus(`Server Down: ${app} is currently unavailable. Please try another method.`);
-      setTimeout(() => setPaymentStatus(null), 3000);
-    } else {
-      setPaymentStatus(`Processing payment via ${app}...`);
-      setTimeout(() => {
-        router.push('/confirmation');
-      }, 2000);
+  const handleRazorpayPayment = () => {
+    if (typeof window === 'undefined' || !(window as any).Razorpay) {
+      setPaymentStatus({type: 'error', message: "Payment Gateway loading... please wait 2 seconds."});
+      return;
     }
+
+    setPaymentStatus({type: 'info', message: "Initializing Razorpay Secure Checkout..."});
+
+    const options = {
+      key: "rzp_test_STqoArgKX3VptF", // User's Live Test Key
+      amount: totalAmount * 100, // Razorpay uses paise
+      currency: "INR",
+      name: "TATA IPL Tickets",
+      description: "BookMyShow Clone Payment",
+      image: "https://bookmyshow.com/favicon.ico",
+      handler: function (response: any) {
+        setPaymentStatus({type: 'success', message: `✅ SECURE PAYMENT SUCCESS! ID: ${response.razorpay_payment_id}`});
+        setTimeout(() => {
+          router.push('/confirmation');
+        }, 1500);
+      },
+      prefill: {
+        name: "Cricket Fan",
+        email: "fan@example.com",
+        contact: "9999999999"
+      },
+      theme: { color: "#F84464" }
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.on('payment.failed', function (response: any) {
+      setPaymentStatus({type: 'error', message: `❌ Payment Failed: ${response.error.description}`});
+    });
+    rzp.open();
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-30 shadow-sm">
         <div className="max-w-md mx-auto flex items-center">
           <button onClick={() => router.back()} className="p-1 hover:bg-gray-100 rounded-full transition mr-4">
@@ -62,68 +85,38 @@ export default function PaymentPage() {
         </div>
 
         {paymentStatus && (
-           <div className={`p-4 rounded-lg text-sm font-semibold transition-all ${paymentStatus.includes('Server Down') ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}`}>
-              {paymentStatus}
+           <div className={`p-4 rounded-lg text-sm font-bold shadow-sm transition-all ${
+             paymentStatus.type === 'error' ? 'bg-red-50 text-red-600 border border-red-200' :
+             paymentStatus.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+             'bg-blue-50 text-blue-600 border border-blue-200'
+           }`}>
+              {paymentStatus.message}
            </div>
         )}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
            <div className="p-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">UPI Options</h2>
+              <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Payment Options</h2>
            </div>
-           
-           <div className="flex flex-col">
-              <button onClick={() => handleUpiClick('Paytm')} className="flex items-center justify-between p-4 border-b border-gray-100 hover:bg-gray-50 transition active:bg-gray-100 text-left">
-                 <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-[#002970] rounded-lg flex items-center justify-center shadow-sm">
-                       <span className="text-white font-bold text-xs">Paytm</span>
-                    </div>
-                    <div>
-                       <p className="font-bold text-gray-900">Paytm <span className="text-xs font-normal text-[#F84464] bg-red-50 px-2 py-0.5 rounded ml-2">Active</span></p>
-                       <p className="text-xs text-gray-500">Pay instantly</p>
-                    </div>
-                 </div>
-                 <ChevronLeft className="w-5 h-5 text-gray-400 transform rotate-180" />
-              </button>
-
-              <button onClick={() => handleUpiClick('PhonePe')} className="flex items-center justify-between p-4 border-b border-gray-100 hover:bg-gray-50 transition active:bg-gray-100 text-left">
-                 <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-[#5f259f] rounded-lg flex items-center justify-center shadow-sm">
-                       <span className="text-white font-bold text-xs" style={{transform: "scale(0.8)"}}>PhonePe</span>
-                    </div>
-                    <div>
-                       <p className="font-bold text-gray-900">PhonePe</p>
-                       <p className="text-xs text-gray-500">Fast & secure</p>
-                    </div>
-                 </div>
-                 <ChevronLeft className="w-5 h-5 text-gray-400 transform rotate-180" />
-              </button>
-
-              <button onClick={() => handleUpiClick('Google Pay')} className="flex items-center justify-between p-4 border-b border-gray-100 hover:bg-gray-50 transition active:bg-gray-100 text-left">
-                 <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm">
-                       <span className="text-gray-900 font-bold text-lg">G</span>
-                    </div>
-                    <div>
-                       <p className="font-bold text-gray-900">Google Pay</p>
-                       <p className="text-xs text-gray-500">Via UPI</p>
-                    </div>
-                 </div>
-                 <ChevronLeft className="w-5 h-5 text-gray-400 transform rotate-180" />
-              </button>
-
-              <button onClick={() => handleUpiClick('Other')} className="flex items-center justify-between p-4 hover:bg-gray-50 transition active:bg-gray-100 text-left">
-                 <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                       <span className="text-gray-500 font-bold text-lg">+</span>
-                    </div>
-                    <div>
-                       <p className="font-bold text-gray-900">Other UPI Apps</p>
-                       <p className="text-xs text-gray-500">BHIM, Amazon Pay, etc.</p>
-                    </div>
-                 </div>
-                 <ChevronLeft className="w-5 h-5 text-gray-400 transform rotate-180" />
-              </button>
+           <div className="p-6 flex flex-col space-y-4">
+               <button 
+                  onClick={handleRazorpayPayment} 
+                  className="w-full relative overflow-hidden bg-gray-900 group text-white py-4 rounded-xl shadow-md transition transform active:scale-95 flex items-center justify-center space-x-3 hover:bg-gray-800"
+               >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                  <span className="font-bold text-lg tracking-wide">Pay ₹{totalAmount}</span>
+               </button>
+               <div className="flex items-center justify-center mt-2 space-x-2 text-xs text-gray-500 font-medium pb-2">
+                  <ShieldCheck className="w-5 h-5 text-green-600" />
+                  <span>Guaranteed Safe & Secure Checkout via Razorpay</span>
+               </div>
+               
+               <div className="grid grid-cols-4 gap-2 pt-4 border-t border-gray-100 mt-2">
+                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">UPI</span></div>
+                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">Cards</span></div>
+                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">NetBanking</span></div>
+                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">Wallets</span></div>
+               </div>
            </div>
         </div>
       </div>
