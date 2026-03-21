@@ -17,6 +17,12 @@ interface Match {
   stadium: string;
 }
 
+interface UserDetails {
+  name: string;
+  email: string;
+  phone: string;
+}
+
 interface StoreState {
   selectedMatch: Match | null;
   setSelectedMatch: (match: Match) => void;
@@ -25,6 +31,8 @@ interface StoreState {
   removeSeat: (seatId: string) => void;
   clearSeats: () => void;
   ticketLimit: number;
+  userDetails: UserDetails | null;
+  setUserDetails: (details: UserDetails) => void;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -42,4 +50,6 @@ export const useStore = create<StoreState>((set, get) => ({
   })),
   clearSeats: () => set({ selectedSeats: [] }),
   ticketLimit: 1, // specified in requirements as 1 for the booking
+  userDetails: null,
+  setUserDetails: (details) => set({ userDetails: details }),
 }));

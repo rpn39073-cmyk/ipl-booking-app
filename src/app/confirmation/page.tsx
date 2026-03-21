@@ -2,13 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Ticket, Check } from 'lucide-react';
+import { CheckCircle2, Ticket, Check, Download } from 'lucide-react';
+import Script from 'next/script';
 import { useStore } from '@/store/useStore';
 
 export default function ConfirmationPage() {
-  const { selectedSeats, selectedMatch } = useStore();
+  const { selectedSeats, selectedMatch, userDetails } = useStore();
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const [email, setEmail] = useState('cheifhu@outlook.com');
+  const [email, setEmail] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const totalAmount = selectedSeats.length > 0 ? selectedSeats.length * 80 : 80;
   const standText = selectedSeats.length > 0 
@@ -22,8 +24,27 @@ export default function ConfirmationPage() {
     }, 1500);
   };
 
+  const downloadPDF = () => {
+    setIsDownloading(true);
+    const element = document.getElementById('ticket-pdf-content');
+    const opt = {
+      margin:       [0.2, 0.2, 0.2, 0.2],
+      filename:     `TATA_IPL_Ticket_${selectedMatch?.team_home || 'Match'}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    if (typeof window !== 'undefined' && (window as any).html2pdf) {
+       (window as any).html2pdf().set(opt).from(element).save().then(() => setIsDownloading(false));
+    } else {
+       alert("PDF generator not fully loaded yet. Please wait a second and try again.");
+       setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" strategy="lazyOnload" />
       <div className="max-w-xl mx-auto w-full p-4 mt-8 flex flex-col gap-6">
          
          <div className="bg-green-500 rounded-xl shadow-lg p-8 flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
@@ -32,7 +53,19 @@ export default function ConfirmationPage() {
             <p className="text-green-100 font-medium">Your tickets have been confirmed!</p>
          </div>
 
-         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-2">
+         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center mt-2">
+            <button 
+               onClick={downloadPDF}
+               disabled={isDownloading}
+               className="w-full bg-[#1e293b] hover:bg-black text-white font-bold py-3 rounded-lg shadow-md text-sm transition focus:outline-none flex justify-center items-center space-x-2"
+            >
+               <Download className="w-5 h-5" />
+               <span>{isDownloading ? 'Generating PDF...' : 'Download M-Ticket (PDF)'}</span>
+            </button>
+            <p className="text-[10px] text-gray-400 mt-3 font-medium">This PDF serves as your official entry gate pass.</p>
+         </div>
+
+         <div id="ticket-pdf-content" className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-2 print:shadow-none print:border-none">
             <div className="bg-gray-900 p-4 flex justify-between items-center text-white relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full transform translate-x-10 -translate-y-10"></div>
                <div>
@@ -47,6 +80,15 @@ export default function ConfirmationPage() {
             </div>
             
             <div className="p-6 flex flex-col gap-4">
+               {userDetails && (
+                 <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+                    <p className="text-sm text-gray-500 font-medium">Ticket Holder</p>
+                    <div className="text-right">
+                       <p className="text-sm font-bold text-gray-900">{userDetails.name}</p>
+                       <p className="text-xs text-gray-500 font-medium">{userDetails.email} • +91 {userDetails.phone}</p>
+                    </div>
+                 </div>
+               )}
                <div className="flex justify-between items-center border-b border-gray-100 pb-4">
                   <p className="text-sm text-gray-500 font-medium">Date & Time</p>
                   <p className="text-sm font-bold text-gray-900 text-right">Sun 29 Mar 2026<br/>07:30 PM</p>

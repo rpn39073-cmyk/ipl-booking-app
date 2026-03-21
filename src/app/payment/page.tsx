@@ -3,17 +3,22 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, QrCode, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, QrCode, ShieldCheck, User } from 'lucide-react';
 import Script from 'next/script';
 import { useStore } from '@/store/useStore';
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { selectedSeats } = useStore();
+  const { selectedSeats, setUserDetails } = useStore();
   
   const totalAmount = selectedSeats.length > 0 ? selectedSeats.length * 80 : 80;
 
   const [paymentStatus, setPaymentStatus] = useState<{type: 'info'|'success'|'error', message: string} | null>(null);
+  
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const isFormValid = name.length >= 3 && email.includes('@') && phone.length >= 10;
 
   const handleRazorpayPayment = () => {
     if (typeof window === 'undefined' || !(window as any).Razorpay) {
@@ -31,15 +36,16 @@ export default function PaymentPage() {
       description: "BookMyShow Clone Payment",
       image: "https://bookmyshow.com/favicon.ico",
       handler: function (response: any) {
+        setUserDetails({ name, email, phone });
         setPaymentStatus({type: 'success', message: `✅ SECURE PAYMENT SUCCESS! ID: ${response.razorpay_payment_id}`});
         setTimeout(() => {
           router.push('/confirmation');
         }, 1500);
       },
       prefill: {
-        name: "Cricket Fan",
-        email: "fan@example.com",
-        contact: "9999999999"
+        name: name || "Cricket Fan",
+        email: email || "fan@example.com",
+        contact: phone || "9999999999"
       },
       theme: { color: "#F84464" }
     };
@@ -65,6 +71,18 @@ export default function PaymentPage() {
 
       <div className="max-w-md mx-auto w-full p-4 flex flex-col gap-6 mt-4">
         
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+           <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center space-x-2">
+              <User className="w-5 h-5 text-gray-500" />
+              <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Contact Details</h2>
+           </div>
+           <div className="p-6 flex flex-col space-y-4">
+              <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#F84464] focus:border-transparent outline-none transition" />
+              <input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#F84464] focus:border-transparent outline-none transition" />
+              <input type="tel" placeholder="Phone Number" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\\D/g, ''))} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#F84464] focus:border-transparent outline-none transition" />
+           </div>
+        </div>
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center justify-center text-center">
            <p className="text-sm text-gray-500 font-medium mb-1">Amount Payable</p>
            <p className="text-4xl font-black text-gray-900">₹{totalAmount}</p>
@@ -101,10 +119,14 @@ export default function PaymentPage() {
            <div className="p-6 flex flex-col space-y-4">
                <button 
                   onClick={handleRazorpayPayment} 
-                  className="w-full relative overflow-hidden bg-gray-900 group text-white py-4 rounded-xl shadow-md transition transform active:scale-95 flex items-center justify-center space-x-3 hover:bg-gray-800"
+                  disabled={!isFormValid}
+                  className={`w-full relative overflow-hidden group text-white py-4 rounded-xl shadow-md transition transform flex items-center justify-center space-x-3 
+                    ${isFormValid ? 'bg-gray-900 hover:bg-gray-800 active:scale-95' : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                  <span className="font-bold text-lg tracking-wide">Pay ₹{totalAmount}</span>
+                  {isFormValid && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>}
+                  <span className="font-bold text-lg tracking-wide">
+                     {isFormValid ? `Pay ₹${totalAmount}` : 'Enter Details to Pay'}
+                  </span>
                </button>
                <div className="flex items-center justify-center mt-2 space-x-2 text-xs text-gray-500 font-medium pb-2">
                   <ShieldCheck className="w-5 h-5 text-green-600" />
