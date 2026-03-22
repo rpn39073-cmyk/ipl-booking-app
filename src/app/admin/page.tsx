@@ -9,9 +9,12 @@ export default function AdminPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
-  
   const [metrics, setMetrics] = useState({ totalBookings: 0, revenue: 0 });
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
+
+  // Match addition states
+  const [newMatch, setNewMatch] = useState({ home: '', away: '', date: '', time: '', stadium: '' });
+  const [isAddingMatch, setIsAddingMatch] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -163,7 +166,7 @@ export default function AdminPage() {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Manage Matches</h1>
-              <button className="bg-gray-900 text-white px-4 py-2 rounded-lg flex items-center space-x-2 text-sm font-medium hover:bg-gray-800 transition">
+              <button onClick={() => setNewMatch({ home: '', away: '', date: '', time: '', stadium: '' })} className="bg-gray-900 text-white px-4 py-2 rounded-lg flex items-center space-x-2 text-sm font-medium hover:bg-gray-800 transition">
                 <Plus className="w-4 h-4" /> <span>Add Match</span>
               </button>
             </div>
@@ -172,26 +175,56 @@ export default function AdminPage() {
                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Home Team</label>
-                    <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" placeholder="E.g. KKR" />
+                    <input type="text" value={newMatch.home} onChange={e => setNewMatch({...newMatch, home: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" placeholder="E.g. Gujarat Titans" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Away Team</label>
-                    <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" placeholder="E.g. MI" />
+                    <input type="text" value={newMatch.away} onChange={e => setNewMatch({...newMatch, away: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" placeholder="E.g. Mumbai Indians" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
-                    <input type="date" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" />
+                    <input type="date" value={newMatch.date} onChange={e => setNewMatch({...newMatch, date: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Time</label>
-                    <input type="time" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" />
+                    <input type="time" value={newMatch.time} onChange={e => setNewMatch({...newMatch, time: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-500 mb-1">Stadium</label>
-                    <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" placeholder="E.g. Eden Gardens, Kolkata" />
+                    <input type="text" value={newMatch.stadium} onChange={e => setNewMatch({...newMatch, stadium: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-gray-900" placeholder="E.g. Narendra Modi Stadium, Ahmedabad" />
                   </div>
                   <div className="col-span-2 mt-2">
-                    <button className="bg-[#F84464] text-white px-6 py-2 rounded-lg text-sm font-bold shadow hover:bg-rose-600 transition">Save Match</button>
+                    <button 
+                       onClick={async () => {
+                          if (!newMatch.home || !newMatch.away || !newMatch.date || !newMatch.time || !newMatch.stadium) {
+                             alert("Please fill all fields"); return;
+                          }
+                          setIsAddingMatch(true);
+                          try {
+                             const dateTimeStr = new Date(`${newMatch.date}T${newMatch.time}`).toISOString();
+                             const { data: matchData, error: matchError } = await supabase.from('matches').insert([{ team_home: newMatch.home, team_away: newMatch.away, date_time: dateTimeStr, stadium: newMatch.stadium }]).select().single();
+                             if (matchError) throw matchError;
+                             // Automatically seed the stadium with empty stands and seats so it can be booked
+                             const standsParam = [ { match_id: matchData.id, name: 'North General', color: '#3b82f6', price: 500 }, { match_id: matchData.id, name: 'Corporate Box', color: '#f59e0b', price: 4000 }, { match_id: matchData.id, name: 'VIP Pavilion', color: '#8b5cf6', price: 2500 } ];
+                             const { data: standsData, error: standsError } = await supabase.from('stands').insert(standsParam).select();
+                             if (standsError) throw standsError;
+                             const seatsToInsert: any[] = [];
+                             standsData.forEach((stand: any) => {
+                                for(let i=1; i<=10; i++) seatsToInsert.push({ stand_id: stand.id, row_label: 'A', seat_number: i, status: 'Available' });
+                             });
+                             const { error: seatsError } = await supabase.from('seats').insert(seatsToInsert);
+                             if (seatsError) throw seatsError;
+
+                             alert("Match Successfully Placed with fully operational Seating Data!");
+                             setNewMatch({ home: '', away: '', date: '', time: '', stadium: '' });
+                          } catch (e: any) { alert("Error Adding match: " + e.message); } 
+                          finally { setIsAddingMatch(false); }
+                       }}
+                       disabled={isAddingMatch}
+                       className="bg-[#F84464] text-white px-6 py-2 rounded-lg text-sm font-bold shadow hover:bg-rose-600 transition disabled:bg-gray-400"
+                    >
+                       {isAddingMatch ? 'Saving Database...' : 'Save Match'}
+                    </button>
                   </div>
                </div>
             </div>
