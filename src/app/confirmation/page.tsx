@@ -25,35 +25,20 @@ export default function ConfirmationPage() {
   };
 
   const downloadPDF = () => {
-    setIsDownloading(true);
-    const element = document.getElementById('ticket-pdf-content');
-    const opt = {
-      margin:       [0.2, 0.2, 0.2, 0.2],
-      filename:     `TATA_IPL_Ticket_${selectedMatch?.team_home || 'Match'}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-    if (typeof window !== 'undefined' && (window as any).html2pdf) {
-       (window as any).html2pdf().set(opt).from(element).save().then(() => setIsDownloading(false));
-    } else {
-       alert("PDF generator not fully loaded yet. Please wait a second and try again.");
-       setIsDownloading(false);
-    }
+    window.print();
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" strategy="lazyOnload" />
-      <div className="max-w-xl mx-auto w-full p-4 mt-8 flex flex-col gap-6">
+    <div className="flex flex-col min-h-screen bg-gray-50 print:bg-white">
+      <div className="max-w-xl mx-auto w-full p-4 mt-8 flex flex-col gap-6 print:m-0 print:p-0 print:block">
          
-         <div className="bg-green-500 rounded-xl shadow-lg p-8 flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
+         <div className="bg-green-500 rounded-xl shadow-lg p-8 flex flex-col items-center justify-center text-center animate-in zoom-in duration-500 print:hidden">
             <CheckCircle2 className="w-20 h-20 text-white mb-4 shadow-sm rounded-full bg-green-600" />
             <h1 className="text-3xl font-black text-white mb-2 tracking-tight">Payment Successful</h1>
             <p className="text-green-100 font-medium">Your tickets have been confirmed!</p>
          </div>
 
-         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center mt-2">
+         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center mt-2 print:hidden">
             <button 
                onClick={downloadPDF}
                disabled={isDownloading}
@@ -104,7 +89,7 @@ export default function ConfirmationPage() {
             </div>
          </div>
 
-         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center mt-2">
+         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center mt-2 print:hidden">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Get E-Ticket via Email</h3>
             <p className="text-xs text-gray-500 mb-5 text-center">We will send your M-Ticket to this email address.</p>
             
@@ -134,7 +119,7 @@ export default function ConfirmationPage() {
             </div>
          </div>
 
-         <div className="flex justify-center mt-4">
+         <div className="flex justify-center mt-4 print:hidden">
             <Link 
               href="/"
               className="text-[#F84464] font-bold text-sm hover:underline"
