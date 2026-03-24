@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, QrCode, ShieldCheck, User } from 'lucide-react';
-import Script from 'next/script';
 import { useStore } from '@/store/useStore';
 
 export default function PaymentPage() {
@@ -20,46 +19,23 @@ export default function PaymentPage() {
   const [phone, setPhone] = useState('');
   const isFormValid = name.length >= 3 && email.includes('@') && phone.length >= 10;
 
-  const handleRazorpayPayment = () => {
-    if (typeof window === 'undefined' || !(window as any).Razorpay) {
-      setPaymentStatus({type: 'error', message: "Payment Gateway loading... please wait 2 seconds."});
-      return;
-    }
+  const handlePayment = () => {
+    setPaymentStatus({type: 'info', message: "Initializing Secure Checkout..."});
 
-    setPaymentStatus({type: 'info', message: "Initializing Razorpay Secure Checkout..."});
-
-    const options = {
-      key: "rzp_test_STqoArgKX3VptF", // User's Live Test Key
-      amount: totalAmount * 100, // Razorpay uses paise
-      currency: "INR",
-      name: "TATA IPL Tickets",
-      description: "BookMyShow Clone Payment",
-      image: "https://bookmyshow.com/favicon.ico",
-      handler: function (response: any) {
-        setUserDetails({ name, email, phone });
-        setPaymentStatus({type: 'success', message: `✅ SECURE PAYMENT SUCCESS! ID: ${response.razorpay_payment_id}`});
-        setTimeout(() => {
-          router.push('/confirmation');
-        }, 1500);
-      },
-      prefill: {
-        name: name || "Cricket Fan",
-        email: email || "fan@example.com",
-        contact: phone || "9999999999"
-      },
-      theme: { color: "#F84464" }
-    };
-
-    const rzp = new (window as any).Razorpay(options);
-    rzp.on('payment.failed', function (response: any) {
-      setPaymentStatus({type: 'error', message: `❌ Payment Failed: ${response.error.description}`});
-    });
-    rzp.open();
+    // Mock payment gateway flow placeholder
+    setTimeout(() => {
+       setUserDetails({ name, email, phone });
+       console.log("Payment Gateway Logic pending integration.");
+       setPaymentStatus({type: 'success', message: `✅ SECURE PAYMENT SUCCESS! ID: MOCK_PAYMENT_${Math.floor(Math.random() * 10000)}`});
+       
+       setTimeout(() => {
+         router.push('/confirmation');
+       }, 1500);
+    }, 2000);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-30 shadow-sm">
         <div className="max-w-md mx-auto flex items-center">
           <button onClick={() => router.back()} className="p-1 hover:bg-gray-100 rounded-full transition mr-4">
@@ -118,7 +94,7 @@ export default function PaymentPage() {
            </div>
            <div className="p-6 flex flex-col space-y-4">
                <button 
-                  onClick={handleRazorpayPayment} 
+                  onClick={handlePayment} 
                   disabled={!isFormValid}
                   className={`w-full relative overflow-hidden group text-white py-4 rounded-xl shadow-md transition transform flex items-center justify-center space-x-3 
                     ${isFormValid ? 'bg-gray-900 hover:bg-gray-800 active:scale-95' : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
@@ -130,7 +106,7 @@ export default function PaymentPage() {
                </button>
                <div className="flex items-center justify-center mt-2 space-x-2 text-xs text-gray-500 font-medium pb-2">
                   <ShieldCheck className="w-5 h-5 text-green-600" />
-                  <span>Guaranteed Safe & Secure Checkout via Razorpay</span>
+                  <span>Guaranteed Safe & Secure Checkout</span>
                </div>
                
                <div className="grid grid-cols-4 gap-2 pt-4 border-t border-gray-100 mt-2">
