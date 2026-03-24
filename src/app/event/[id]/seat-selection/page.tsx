@@ -72,13 +72,27 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
   }
 
   useEffect(() => {
-    setSelectedMatch({
-       id: idStr,
-       team_home: title.split(' vs ')[0] || 'Kolkata Knight Riders',
-       team_away: title.split(' vs ')[1] || 'Mumbai Indians',
-       date_time: "Sun 29 Mar 2026",
-       stadium: "EDEN GARDENS"
-    });
+    if (idStr.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      supabase.from('matches').select('*').eq('id', idStr).single().then(({data}) => {
+         if (data) {
+            setSelectedMatch({
+               id: data.id,
+               team_home: data.team_home,
+               team_away: data.team_away,
+               date_time: new Date(data.date_time).toLocaleDateString('en-US', {weekday:'short', day:'numeric', month:'short', year:'numeric'}),
+               stadium: data.stadium
+            });
+         }
+      });
+    } else {
+      setSelectedMatch({
+         id: idStr,
+         team_home: title.split(' vs ')[0] || 'Kolkata Knight Riders',
+         team_away: title.split(' vs ')[1] || 'Mumbai Indians',
+         date_time: "Sun 29 Mar 2026",
+         stadium: "EDEN GARDENS"
+      });
+    }
   }, [idStr, title, setSelectedMatch]);
 
   useEffect(() => {
@@ -104,8 +118,10 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
               <ChevronLeft className="w-6 h-6 text-gray-700" />
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 leading-tight">{title}</h1>
-              <p className="text-xs text-gray-500">{selectedMatch?.stadium || "EDEN GARDENS"} | 29 Mar, 07:30 PM</p>
+              <h1 className="text-lg font-bold text-gray-900 leading-tight">
+                 {selectedMatch ? `${selectedMatch.team_home} vs ${selectedMatch.team_away}` : title}
+              </h1>
+              <p className="text-xs text-gray-500">{selectedMatch?.stadium || "EDEN GARDENS"} | {selectedMatch?.date_time || "29 Mar"}</p>
             </div>
           </div>
           <div className="text-sm font-semibold text-gray-900">

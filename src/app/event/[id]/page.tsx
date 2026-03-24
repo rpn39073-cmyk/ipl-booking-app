@@ -1,24 +1,43 @@
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, Languages, Info, AlertTriangle } from 'lucide-react';
 
+import { createClient } from '@supabase/supabase-js';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function EventDetails({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const idStr = resolvedParams.id;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  let matchData = null;
+  // If it's a UUID, fetch from DB
+  if (idStr.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+     const { data } = await supabase.from('matches').select('*').eq('id', idStr).single();
+     matchData = data;
+  }
+  
   let title = "Kolkata Knight Riders vs Mumbai Indians";
-  if (idStr.includes('-vs-')) {
+  if (matchData) {
+     title = `${matchData.team_home} vs ${matchData.team_away}`;
+  } else if (idStr.includes('-vs-')) {
     const formatTeam = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     title = `${formatTeam(idStr.split('-vs-')[0])} vs ${formatTeam(idStr.split('-vs-')[1])}`;
   }
 
-  // Mock data for the event
+  // Define the event based on DB record or mock fallback
   const event = {
     title: title,
-    date: "Sun 29 Mar 2026",
-    time: "07:30 PM",
+    date: matchData ? new Date(matchData.date_time).toLocaleDateString('en-US', {weekday:'short', day:'numeric', month:'short', year:'numeric'}) : "Sun 29 Mar 2026",
+    time: matchData ? new Date(matchData.date_time).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}) : "07:30 PM",
     duration: "5 Hours",
     language: "Multi",
-    location: "EDEN GARDENS",
-    minPrice: 50,
+    location: matchData ? matchData.stadium : "EDEN GARDENS",
+    minPrice: 500,
   };
 
   return (
