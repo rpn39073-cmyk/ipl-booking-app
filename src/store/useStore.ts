@@ -24,6 +24,8 @@ interface UserDetails {
 }
 
 interface StoreState {
+  ticketPrice: number;
+  setTicketPrice: (price: number) => void;
   selectedMatch: Match | null;
   setSelectedMatch: (match: Match) => void;
   selectedSeats: Seat[];
@@ -36,6 +38,8 @@ interface StoreState {
 }
 
 export const useStore = create<StoreState>((set, get) => ({
+  ticketPrice: 500,
+  setTicketPrice: (price) => set({ ticketPrice: price }),
   selectedMatch: null,
   setSelectedMatch: (match) => set({ selectedMatch: match }),
   selectedSeats: [],

@@ -9,9 +9,9 @@ import { useStore } from '@/store/useStore';
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { selectedSeats, setUserDetails } = useStore();
+  const { selectedSeats, setUserDetails, ticketPrice } = useStore();
   
-  const totalAmount = selectedSeats.length > 0 ? selectedSeats.length * 80 : 80;
+  const totalAmount = selectedSeats.length > 0 ? selectedSeats.length * ticketPrice : ticketPrice;
 
   const [paymentStatus, setPaymentStatus] = useState<{type: 'info'|'success'|'error', message: string} | null>(null);
   

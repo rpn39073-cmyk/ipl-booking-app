@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, IndianRupee, Activity, Trophy as Stadium } from 'lucide-react';
+import { Plus, Users, IndianRupee, Activity, Trophy as Stadium, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminPage() {
@@ -33,6 +33,16 @@ export default function AdminPage() {
      };
     fetchAdminData();
   }, [isAuthenticated]);
+
+  const handleDeleteMatch = async (id: string) => {
+     if (!confirm("Are you sure you want to permanently delete this match and all its seats?")) return;
+     try {
+        const { error } = await supabase.from('matches').delete().eq('id', id);
+        if (error) throw error;
+        setDbMatches(dbMatches.filter(m => m.id !== id));
+        alert("Match deleted successfully.");
+     } catch (e: any) { alert("Error deleting match: " + e.message); }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,6 +259,7 @@ export default function AdminPage() {
                            <th className="px-6 py-3">Fixture</th>
                            <th className="px-6 py-3">Date & Time</th>
                            <th className="px-6 py-3">Stadium</th>
+                           <th className="px-6 py-3">Action</th>
                         </tr>
                      </thead>
                      <tbody>
@@ -263,6 +274,9 @@ export default function AdminPage() {
                                  <td className="px-6 py-4 font-bold text-gray-900">{m.team_home} vs {m.team_away}</td>
                                  <td className="px-6 py-4">{new Date(m.date_time).toLocaleString()}</td>
                                  <td className="px-6 py-4">{m.stadium}</td>
+                                 <td className="px-6 py-4">
+                                    <button onClick={() => handleDeleteMatch(m.id)} className="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-full transition" title="Delete Match"><Trash2 className="w-4 h-4" /></button>
+                                 </td>
                               </tr>
                            ))
                         )}

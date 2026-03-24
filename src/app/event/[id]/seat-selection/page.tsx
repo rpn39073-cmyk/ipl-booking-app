@@ -63,7 +63,7 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
 
   const [selectedStandId, setSelectedStandId] = useState('sw');
   const [dbStands, setDbStands] = useState<any[]>([]);
-  const { selectedSeats, setSelectedMatch, selectedMatch } = useStore();
+  const { selectedSeats, setSelectedMatch, selectedMatch, setTicketPrice } = useStore();
   
   const idStr = resolvedParams.id;
   let title = "Kolkata Knight Riders vs Mumbai Indians";
@@ -118,6 +118,10 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
 
   const selectedStand = computedStands.find(s => s.id === selectedStandId)!;
   const totalAmount = selectedSeats.length * selectedStand.price;
+
+  useEffect(() => {
+     setTicketPrice(selectedStand.price);
+  }, [selectedStand.price, setTicketPrice]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 pb-24">
