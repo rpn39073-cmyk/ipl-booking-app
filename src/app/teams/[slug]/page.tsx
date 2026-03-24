@@ -1,6 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, Calendar, MapPin, Trophy } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function TeamDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
@@ -14,36 +18,19 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
   if (resolvedParams.slug.includes('chennai')) theme = { bg: 'bg-yellow-500', color: 'text-blue-900', accent: 'bg-yellow-600' };
   if (resolvedParams.slug.includes('gujarat')) theme = { bg: 'bg-blue-900', color: 'text-white', accent: 'bg-blue-700' };
 
-  // Mock upcoming matches
-  const upcomingMatches = [
-    {
-      id: `${resolvedParams.slug}-vs-delhi-capitals`,
-      title: `${teamName} vs Delhi Capitals`,
-      date: 'Sun, 05 Apr',
-      time: '07:30 PM',
-      stadium: 'Home Stadium',
-      opponent: 'DC',
-      isHome: true
-    },
-    {
-      id: `rajasthan-royals-vs-${resolvedParams.slug}`,
-      title: `Rajasthan Royals vs ${teamName}`,
-      date: 'Wed, 08 Apr',
-      time: '03:30 PM',
-      stadium: 'Sawai Mansingh Stadium',
-      opponent: 'RR',
-      isHome: false
-    },
-    {
-      id: `${resolvedParams.slug}-vs-chennai-super-kings`,
-      title: `${teamName} vs Chennai Super Kings`,
-      date: 'Sat, 11 Apr',
-      time: '07:30 PM',
-      stadium: 'Home Stadium',
-      opponent: 'CSK',
-      isHome: true
-    }
-  ];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  let upcomingMatches: any[] = [];
+  // Use a simple fetch all and filter since ilike can be tricky with exact names in Supabase
+  const { data: allMatches } = await supabase.from('matches').select('*').order('date_time', { ascending: true });
+  if (allMatches) {
+     upcomingMatches = allMatches.filter((m: any) => 
+       m.team_home.toLowerCase().includes(teamName.toLowerCase()) || 
+       m.team_away.toLowerCase().includes(teamName.toLowerCase())
+     );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 pb-20">
@@ -78,30 +65,35 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Matches ({upcomingMatches.length})</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {upcomingMatches.map((match) => (
+          {upcomingMatches.length > 0 ? upcomingMatches.map((match: any) => {
+            const isHome = match.team_home.toLowerCase().includes(teamName.toLowerCase());
+            const opponentName = isHome ? match.team_away : match.team_home;
+            const oppInitials = opponentName.split(' ').map((w: string) => w[0]).join('');
+            
+            return (
             <div key={match.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
                <div className="h-32 bg-gray-900 relative flex items-center justify-center p-4">
                   <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider">
-                     {match.isHome ? 'Home' : 'Away'}
+                     {isHome ? 'Home' : 'Away'}
                   </div>
                   <div className="flex items-center justify-between w-full relative z-10 px-4">
                     <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg border-2 border-gray-200">
-                      <span className={`font-black text-xl ${match.isHome ? theme.color : 'text-gray-900'}`}>{match.isHome ? initials : match.opponent}</span>
+                      <span className={`font-black text-xl ${isHome ? theme.color : 'text-gray-900'}`}>{isHome ? initials : oppInitials}</span>
                     </div>
                     <span className="font-black italic text-gray-400 text-lg px-2">VS</span>
                     <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg border-2 border-gray-200">
-                      <span className={`font-black text-xl ${!match.isHome ? theme.color : 'text-gray-900'}`}>{!match.isHome ? initials : match.opponent}</span>
+                      <span className={`font-black text-xl ${!isHome ? theme.color : 'text-gray-900'}`}>{!isHome ? initials : oppInitials}</span>
                     </div>
                   </div>
                </div>
                
                <div className="p-5 flex-grow flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-3 line-clamp-2">{match.title}</h3>
+                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-3 line-clamp-2">{match.team_home} vs {match.team_away}</h3>
                     <div className="space-y-2">
                        <div className="flex items-center text-sm text-gray-600">
                           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{match.date} | {match.time}</span>
+                          <span>{new Date(match.date_time).toLocaleDateString()} | {new Date(match.date_time).toLocaleTimeString()}</span>
                        </div>
                        <div className="flex items-center text-sm text-gray-600">
                           <MapPin className="w-4 h-4 mr-2 text-gray-400" />
@@ -111,7 +103,7 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
                   </div>
                   
                   <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                     <span className="font-bold text-gray-900">₹50 <span className="text-xs font-normal text-gray-500">onwards</span></span>
+                     <span className="font-bold text-gray-900">₹500 <span className="text-xs font-normal text-gray-500">onwards</span></span>
                      <Link href={`/event/${match.id}`}>
                         <button className="bg-[#F84464] hover:bg-rose-600 text-white px-5 py-2 rounded-lg font-semibold text-sm transition shadow-md flex items-center space-x-1">
                            <span>Book Tickets</span>
@@ -120,7 +112,7 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
                   </div>
                </div>
             </div>
-          ))}
+          )}) : <p className="text-gray-500 py-8">No upcoming matches scheduled for {teamName}.</p>}
         </div>
       </div>
     </div>
