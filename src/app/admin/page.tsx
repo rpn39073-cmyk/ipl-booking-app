@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [metrics, setMetrics] = useState({ totalBookings: 0, revenue: 0 });
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [dbMatches, setDbMatches] = useState<any[]>([]);
 
   // Match addition states
   const [newMatch, setNewMatch] = useState({ home: '', away: '', date: '', time: '', stadium: '' });
@@ -18,16 +19,18 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const fetchAdminData = async () => {
-       const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(10);
-       if (bookings) {
-          setRecentBookings(bookings);
-          setMetrics({
-             totalBookings: bookings.length, // Should be count query in production
-             revenue: bookings.reduce((sum, b) => sum + Number(b.amount || 0), 0)
-          });
-       }
-    };
+     const fetchAdminData = async () => {
+        const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(10);
+        if (bookings) {
+           setRecentBookings(bookings);
+           setMetrics({
+              totalBookings: bookings.length,
+              revenue: bookings.reduce((sum, b) => sum + Number(b.amount || 0), 0)
+           });
+        }
+        const { data: matches } = await supabase.from('matches').select('*').order('created_at', { ascending: false });
+        if (matches) setDbMatches(matches);
+     };
     fetchAdminData();
   }, [isAuthenticated]);
 
@@ -205,7 +208,14 @@ export default function AdminPage() {
                              const { data: matchData, error: matchError } = await supabase.from('matches').insert([{ team_home: newMatch.home, team_away: newMatch.away, date_time: dateTimeStr, stadium: newMatch.stadium }]).select().single();
                              if (matchError) throw matchError;
                              // Automatically seed the stadium with empty stands and seats so it can be booked
-                             const standsParam = [ { match_id: matchData.id, name: 'North General', color: '#3b82f6', price: 500 }, { match_id: matchData.id, name: 'Corporate Box', color: '#f59e0b', price: 4000 }, { match_id: matchData.id, name: 'VIP Pavilion', color: '#8b5cf6', price: 2500 } ];
+                             const standsParam = [ 
+                                { match_id: matchData.id, name: 'North (General Stand)', color: '#ec4899', price: 500 }, 
+                                { match_id: matchData.id, name: 'North East (Premium)', color: '#3b82f6', price: 1500 }, 
+                                { match_id: matchData.id, name: 'South East (Pavilion)', color: '#22c55e', price: 2000 }, 
+                                { match_id: matchData.id, name: 'South (VIP Stand)', color: '#a855f7', price: 5000 }, 
+                                { match_id: matchData.id, name: 'Corporate Box', color: '#f59e0b', price: 8000 }, 
+                                { match_id: matchData.id, name: 'North West (Hospitality)', color: '#fb923c', price: 3000 } 
+                             ];
                              const { data: standsData, error: standsError } = await supabase.from('stands').insert(standsParam).select();
                              if (standsError) throw standsError;
                              const seatsToInsert: any[] = [];
@@ -226,6 +236,38 @@ export default function AdminPage() {
                        {isAddingMatch ? 'Saving Database...' : 'Save Match'}
                     </button>
                   </div>
+               </div>
+            </div>
+
+            <div className="mt-8">
+               <h2 className="text-xl font-bold text-gray-900 mb-4">All Matches List</h2>
+               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                  <table className="w-full text-sm text-left text-gray-500">
+                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+                        <tr>
+                           <th className="px-6 py-3">Match ID</th>
+                           <th className="px-6 py-3">Fixture</th>
+                           <th className="px-6 py-3">Date & Time</th>
+                           <th className="px-6 py-3">Stadium</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {dbMatches.length === 0 ? (
+                           <tr>
+                              <td colSpan={4} className="px-6 py-8 text-center text-gray-400">No matches found in database.</td>
+                           </tr>
+                        ) : (
+                           dbMatches.map((m) => (
+                              <tr key={m.id} className="border-b border-gray-50 hover:bg-gray-50">
+                                 <td className="px-6 py-4 text-xs font-mono text-gray-400">{m.id.split('-')[0]}</td>
+                                 <td className="px-6 py-4 font-bold text-gray-900">{m.team_home} vs {m.team_away}</td>
+                                 <td className="px-6 py-4">{new Date(m.date_time).toLocaleString()}</td>
+                                 <td className="px-6 py-4">{m.stadium}</td>
+                              </tr>
+                           ))
+                        )}
+                     </tbody>
+                  </table>
                </div>
             </div>
           </div>

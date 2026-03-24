@@ -61,7 +61,8 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
     { id: 'nw', name: 'North West (Hospitality)', color: '#fb923c', price: 300 },
   ];
 
-  const [selectedStand, setSelectedStand] = useState(stands.find(s => s.id === 'sw')!);
+  const [selectedStandId, setSelectedStandId] = useState('sw');
+  const [dbStands, setDbStands] = useState<any[]>([]);
   const { selectedSeats, setSelectedMatch, selectedMatch } = useStore();
   
   const idStr = resolvedParams.id;
@@ -83,6 +84,9 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
                stadium: data.stadium
             });
          }
+      });
+      supabase.from('stands').select('*').eq('match_id', idStr).then(({data}) => {
+         if (data) setDbStands(data);
       });
     } else {
       setSelectedMatch({
@@ -107,6 +111,12 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
     };
   }, []);
 
+  const computedStands = stands.map(s => {
+     const dbMatch = dbStands.find(db => db.name === s.name);
+     return { ...s, price: dbMatch ? dbMatch.price : s.price };
+  });
+
+  const selectedStand = computedStands.find(s => s.id === selectedStandId)!;
   const totalAmount = selectedSeats.length * selectedStand.price;
 
   return (
@@ -134,7 +144,7 @@ export default function SeatSelectionPage({ params }: { params: Promise<{ id: st
       <div className="max-w-7xl mx-auto w-full p-4 md:p-8 flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
            <h2 className="text-xl font-bold text-gray-900 mb-8 self-start">Select Stand</h2>
-           <AdvancedStadium selectedStandId={selectedStand.id} onSelectStand={setSelectedStand} />
+           <AdvancedStadium selectedStandId={selectedStandId} onSelectStand={(s: any) => setSelectedStandId(s.id)} />
            
            <div className="mt-12 w-full p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h3 className="text-sm font-bold text-gray-900 mb-1">{selectedStand.name}</h3>
