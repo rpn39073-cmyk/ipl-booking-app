@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, QrCode, ShieldCheck, User } from 'lucide-react';
+import Script from 'next/script';
 import { useStore } from '@/store/useStore';
 
 export default function PaymentPage() {
@@ -19,23 +20,52 @@ export default function PaymentPage() {
   const [phone, setPhone] = useState('');
   const isFormValid = name.length >= 3 && email.includes('@') && phone.length >= 10;
 
-  const handlePayment = () => {
-    setPaymentStatus({type: 'info', message: "Initializing Secure Checkout..."});
+  const handlePayment = async () => {
+    setPaymentStatus({type: 'info', message: "Initializing Cashfree Secure Checkout..."});
 
-    // Mock payment gateway flow placeholder
-    setTimeout(() => {
-       setUserDetails({ name, email, phone });
-       console.log("Payment Gateway Logic pending integration.");
-       setPaymentStatus({type: 'success', message: `✅ SECURE PAYMENT SUCCESS! ID: MOCK_PAYMENT_${Math.floor(Math.random() * 10000)}`});
+    if (typeof window === 'undefined' || !(window as any).Cashfree) {
+      setPaymentStatus({type: 'error', message: "Payment Gateway loading... please wait 2 seconds."});
+      return;
+    }
+
+    try {
+       const res = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+             amount: totalAmount,
+             customerName: name || "Cricket Fan",
+             customerPhone: phone || "9999999999",
+             customerEmail: email || "fan@example.com"
+          })
+       });
        
-       setTimeout(() => {
-         router.push('/confirmation');
-       }, 1500);
-    }, 2000);
+       const data = await res.json();
+
+       if (!data.paymentSessionId) {
+          throw new Error(data.error || "Failed to get Payment Session ID from server");
+       }
+
+       setUserDetails({ name, email, phone });
+       
+       const cashfree = (window as any).Cashfree({
+          mode: "production" // Using sandbox mode for production key will fail
+       });
+
+       cashfree.checkout({
+          paymentSessionId: data.paymentSessionId,
+          returnUrl: `${window.location.origin}/confirmation?order_id={order_id}`
+       });
+       
+    } catch (e: any) {
+       console.error(e);
+       setPaymentStatus({type: 'error', message: `❌ Payment Failed: ${e.message}`});
+    }
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="lazyOnload" />
       <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-30 shadow-sm">
         <div className="max-w-md mx-auto flex items-center">
           <button onClick={() => router.back()} className="p-1 hover:bg-gray-100 rounded-full transition mr-4">
