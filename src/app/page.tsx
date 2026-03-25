@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
+import PromoModal from '@/components/PromoModal';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -14,6 +15,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col w-full">
+      <PromoModal />
       {/* Hero Section */}
       <section className="relative w-full h-[300px] md:h-[400px] bg-gradient-to-r from-indigo-900 via-purple-900 to-black overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
