@@ -65,7 +65,7 @@ export default function PaymentPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="lazyOnload" />
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" />
       <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-30 shadow-sm">
         <div className="max-w-md mx-auto flex items-center">
           <button onClick={() => router.back()} className="p-1 hover:bg-gray-100 rounded-full transition mr-4">
