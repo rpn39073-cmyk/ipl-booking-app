@@ -10,6 +10,7 @@ export default async function Home() {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const { data: dbMatches } = await supabase.from('matches').select('*').order('date_time', { ascending: true });
+  const { data: allStands } = await supabase.from('stands').select('match_id, price');
 
   return (
     <div className="flex flex-col w-full">
@@ -66,7 +67,11 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {dbMatches && dbMatches.length > 0 ? dbMatches.map((match: any) => (
+            {dbMatches && dbMatches.length > 0 ? dbMatches.map((match: any) => {
+              const matchStands = allStands?.filter(s => s.match_id === match.id) || [];
+              const lowestPrice = matchStands.length > 0 ? Math.min(...matchStands.map(s => s.price)) : 500;
+              
+              return (
               <div key={match.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition border border-gray-100 flex flex-col relative">
                 <div className="h-48 relative bg-gradient-to-br from-gray-900 to-gray-800 p-6 flex flex-col justify-end">
                   <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-md">
@@ -103,7 +108,7 @@ export default async function Home() {
                   </div>
                   
                   <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <span className="font-bold text-gray-900">₹500 <span className="text-xs text-gray-500 font-normal">onwards</span></span>
+                    <span className="font-bold text-gray-900">₹{lowestPrice} <span className="text-xs text-gray-500 font-normal">onwards</span></span>
                     <Link 
                       href={`/event/${match.id}`}
                       className="bg-[#F84464] hover:bg-rose-600 text-white px-5 py-2 rounded-md transition font-semibold text-sm shadow-md flex items-center space-x-1 group"
@@ -114,7 +119,7 @@ export default async function Home() {
                   </div>
                 </div>
               </div>
-            )) : <p className="text-gray-500">No upcoming matches available.</p>}
+            )}) : <p className="text-gray-500">No upcoming matches available.</p>}
           </div>
         </section>
       </div>

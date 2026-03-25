@@ -10,6 +10,7 @@ export default async function EventsPage() {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const { data: dbMatches } = await supabase.from('matches').select('*').order('date_time', { ascending: true });
+  const { data: allStands } = await supabase.from('stands').select('match_id, price');
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 pb-20">
@@ -25,7 +26,11 @@ export default async function EventsPage() {
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Matches</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {dbMatches && dbMatches.length > 0 ? dbMatches.map((match: any) => (
+          {dbMatches && dbMatches.length > 0 ? dbMatches.map((match: any) => {
+             const matchStands = allStands?.filter(s => s.match_id === match.id) || [];
+             const lowestPrice = matchStands.length > 0 ? Math.min(...matchStands.map(s => s.price)) : 500;
+             
+             return (
              <Link href={`/event/${match.id}`} key={match.id} className="group cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100 flex flex-col">
                <div className="relative aspect-[4/3] bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
                   <div className="text-white text-3xl font-black italic opacity-20 absolute inset-0 flex items-center justify-center">IPL 26</div>
@@ -42,12 +47,12 @@ export default async function EventsPage() {
                  <h3 className="font-bold text-gray-900 leading-tight mb-1">{match.team_home} vs {match.team_away}</h3>
                  <p className="text-xs text-gray-500 mb-2 truncate">{match.stadium}</p>
                  <div className="mt-auto pt-3 border-t border-gray-100 font-bold text-gray-900 flex items-center justify-between">
-                    <span>₹500 <span className="font-normal text-[10px] text-gray-500">onwards</span></span>
+                    <span>₹{lowestPrice} <span className="font-normal text-[10px] text-gray-500">onwards</span></span>
                     <span className="text-xs text-[#F84464] font-bold group-hover:underline">BOOK</span>
                  </div>
                </div>
              </Link>
-          )) : <p className="text-gray-500 col-span-4 py-8">No upcoming matches available.</p>}
+          )}) : <p className="text-gray-500 col-span-4 py-8">No upcoming matches available.</p>}
         </div>
       </div>
     </div>

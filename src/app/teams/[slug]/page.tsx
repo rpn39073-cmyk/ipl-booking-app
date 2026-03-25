@@ -22,9 +22,11 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  let upcomingMatches: any[] = [];
   // Use a simple fetch all and filter since ilike can be tricky with exact names in Supabase
+  let upcomingMatches: any[] = [];
   const { data: allMatches } = await supabase.from('matches').select('*').order('date_time', { ascending: true });
+  const { data: allStands } = await supabase.from('stands').select('match_id, price');
+
   if (allMatches) {
      upcomingMatches = allMatches.filter((m: any) => 
        m.team_home.toLowerCase().includes(teamName.toLowerCase()) || 
@@ -70,6 +72,9 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
             const opponentName = isHome ? match.team_away : match.team_home;
             const oppInitials = opponentName.split(' ').map((w: string) => w[0]).join('');
             
+            const matchStands = allStands?.filter(s => s.match_id === match.id) || [];
+            const lowestPrice = matchStands.length > 0 ? Math.min(...matchStands.map(s => s.price)) : 500;
+            
             return (
             <div key={match.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
                <div className="h-32 bg-gray-900 relative flex items-center justify-center p-4">
@@ -103,7 +108,7 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
                   </div>
                   
                   <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                     <span className="font-bold text-gray-900">₹500 <span className="text-xs font-normal text-gray-500">onwards</span></span>
+                     <span className="font-bold text-gray-900">₹{lowestPrice} <span className="text-xs font-normal text-gray-500">onwards</span></span>
                      <Link href={`/event/${match.id}`}>
                         <button className="bg-[#F84464] hover:bg-rose-600 text-white px-5 py-2 rounded-lg font-semibold text-sm transition shadow-md flex items-center space-x-1">
                            <span>Book Tickets</span>
