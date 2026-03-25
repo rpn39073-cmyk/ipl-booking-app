@@ -17,6 +17,10 @@ export default function AdminPage() {
   const [newMatch, setNewMatch] = useState({ home: '', away: '', date: '', time: '', stadium: '' });
   const [isAddingMatch, setIsAddingMatch] = useState(false);
 
+  // Pricing states
+  const [selectedPricingMatch, setSelectedPricingMatch] = useState<string>('');
+  const [pricingStands, setPricingStands] = useState<any[]>([]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
      const fetchAdminData = async () => {
@@ -33,6 +37,25 @@ export default function AdminPage() {
      };
     fetchAdminData();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+     if (selectedPricingMatch) {
+         supabase.from('stands').select('*').eq('match_id', selectedPricingMatch).order('price', { ascending: true }).then(({data}) => {
+             if (data) setPricingStands(data);
+         });
+     } else {
+         setPricingStands([]);
+     }
+  }, [selectedPricingMatch]);
+
+  const handleUpdatePrice = async (standId: string, newPrice: number) => {
+     try {
+        const { error } = await supabase.from('stands').update({ price: newPrice }).eq('id', standId);
+        if (error) throw error;
+        setPricingStands(prev => prev.map(s => s.id === standId ? { ...s, price: newPrice } : s));
+        alert('Stand Price successfully updated in database!');
+     } catch (e: any) { alert("Error updating price: " + e.message); }
+  };
 
   const handleDeleteMatch = async (id: string) => {
      if (!confirm("Are you sure you want to permanently delete this match and all its seats?")) return;
@@ -289,31 +312,56 @@ export default function AdminPage() {
 
         {activeTab === 'pricing' && (
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Stand Pricing Configuration</h1>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden max-w-2xl">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">Live Stand Pricing Configuration</h1>
+            <div className="mb-6 max-w-sm">
+               <label className="block text-sm font-medium text-gray-700 mb-2">Select Match</label>
+               <select 
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F84464]" 
+                  value={selectedPricingMatch} 
+                  onChange={e => setSelectedPricingMatch(e.target.value)}
+               >
+                  <option value="">-- Choose a Match --</option>
+                  {dbMatches.map(m => (
+                     <option key={m.id} value={m.id}>{m.team_home} vs {m.team_away} ({new Date(m.date_time).toLocaleDateString()})</option>
+                  ))}
+               </select>
+            </div>
+
+            {selectedPricingMatch && pricingStands.length > 0 ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden max-w-3xl">
                <table className="w-full text-sm text-left text-gray-500">
                   <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
                      <tr>
                         <th className="px-6 py-3">Stand Name</th>
-                        <th className="px-6 py-3">Price (₹)</th>
+                        <th className="px-6 py-3">Current Price</th>
+                        <th className="px-6 py-3">New Price (₹)</th>
                         <th className="px-6 py-3">Action</th>
                      </tr>
                   </thead>
                   <tbody>
-                     {['North General', 'Corporate Box', 'VIP Pavilion', 'Premium Stand'].map((stand, i) => (
-                       <tr key={stand} className="border-b border-gray-50">
-                          <td className="px-6 py-4 font-medium text-gray-900">{stand}</td>
-                          <td className="px-6 py-4">
-                             <input type="number" defaultValue={(i+1)*500} className="w-24 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-[#F84464]" />
+                     {pricingStands.map((stand) => (
+                       <tr key={stand.id} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="px-6 py-4 font-medium text-gray-900">{stand.name}</td>
+                          <td className="px-6 py-4 text-emerald-600 font-bold">₹{stand.price}</td>
+                          <td className="px-6 py-4 flex items-center space-x-2">
+                             <input type="number" id={`price-${stand.id}`} defaultValue={stand.price} className="w-24 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-[#F84464] text-gray-900 font-bold" />
                           </td>
                           <td className="px-6 py-4">
-                             <button className="text-[#F84464] font-bold text-xs hover:underline">Update</button>
+                             <button onClick={() => {
+                                const val = (document.getElementById(`price-${stand.id}`) as HTMLInputElement).value;
+                                handleUpdatePrice(stand.id, Number(val));
+                             }} className="bg-[#F84464] text-white px-3 py-1 font-bold rounded shadow hover:bg-rose-600 transition text-xs">Update</button>
                           </td>
                        </tr>
                      ))}
                   </tbody>
                </table>
             </div>
+            ) : selectedPricingMatch ? (
+               <p className="text-gray-500 text-sm">No stands generated for this match.</p>
+            ) : (
+               <p className="text-gray-500 text-sm italic">Please select a match from the dropdown above to view and edit live stand prices.</p>
+            )}
           </div>
         )}
       </div>
