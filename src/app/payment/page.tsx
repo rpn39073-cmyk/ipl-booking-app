@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, QrCode, ShieldCheck, User } from 'lucide-react';
+import { ChevronLeft, ShieldCheck, User } from 'lucide-react';
 import Script from 'next/script';
 import { useStore } from '@/store/useStore';
 
@@ -49,7 +49,7 @@ export default function PaymentPage() {
        setUserDetails({ name, email, phone });
        
        const cashfree = (window as any).Cashfree({
-          mode: "production" // Using sandbox mode for production key will fail
+          mode: "production" 
        });
 
        cashfree.checkout({
@@ -85,7 +85,7 @@ export default function PaymentPage() {
            <div className="p-6 flex flex-col space-y-4">
               <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#F84464] focus:border-transparent outline-none transition" />
               <input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#F84464] focus:border-transparent outline-none transition" />
-              <input type="tel" placeholder="Phone Number" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\\D/g, ''))} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#F84464] focus:border-transparent outline-none transition" />
+              <input type="tel" placeholder="Phone Number" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#F84464] focus:border-transparent outline-none transition" />
            </div>
         </div>
 
@@ -100,7 +100,7 @@ export default function PaymentPage() {
            <p className="text-xs text-gray-500 mb-6">Scan with any UPI App</p>
            
            <div className="w-48 h-48 bg-white border-2 border-gray-100 p-2 rounded-xl shadow-inner mb-4 flex items-center justify-center">
-               <QrCode className="w-full h-full text-gray-800" strokeWidth={1} />
+               <img src="/qr-code.png" alt="Payment QR" className="w-full h-full object-contain" />
            </div>
            
            <div className="flex space-x-2 items-center justify-center pt-4 border-t border-gray-100 w-full">
@@ -137,13 +137,6 @@ export default function PaymentPage() {
                <div className="flex items-center justify-center mt-2 space-x-2 text-xs text-gray-500 font-medium pb-2">
                   <ShieldCheck className="w-5 h-5 text-green-600" />
                   <span>Guaranteed Safe & Secure Checkout</span>
-               </div>
-               
-               <div className="grid grid-cols-4 gap-2 pt-4 border-t border-gray-100 mt-2">
-                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">UPI</span></div>
-                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">Cards</span></div>
-                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">NetBanking</span></div>
-                  <div className="bg-gray-50 border border-gray-100 h-10 rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-400">Wallets</span></div>
                </div>
            </div>
         </div>
