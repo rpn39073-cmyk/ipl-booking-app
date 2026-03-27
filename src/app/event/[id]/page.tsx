@@ -20,6 +20,15 @@ export default async function EventDetails({ params }: { params: Promise<{ id: s
      const { data } = await supabase.from('matches').select('*').eq('id', idStr).single();
      matchData = data;
   }
+
+  // Fetch lowest price for this match
+  const { data: matchStands } = await supabase.from('stands')
+    .select('price')
+    .eq('match_id', idStr);
+  
+  const minPrice = matchStands && matchStands.length > 0 
+    ? Math.min(...matchStands.map(s => s.price)) 
+    : 500;
   
   let title = "Kolkata Knight Riders vs Mumbai Indians";
   if (matchData) {
@@ -37,7 +46,7 @@ export default async function EventDetails({ params }: { params: Promise<{ id: s
     duration: "5 Hours",
     language: "Multi",
     location: matchData ? matchData.stadium : "EDEN GARDENS",
-    minPrice: 500,
+    minPrice: minPrice,
   };
 
   return (
