@@ -117,13 +117,9 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
                     <div className="space-y-2">
                        <div className="flex items-center text-sm text-gray-600">
                           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{new Date(match.date_time).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} | {(() => {
-                            const date = new Date(match.date_time);
-                            let hours = date.getUTCHours() + 5.5;
-                            if (hours >= 24) hours -= 24;
-                            const displayHours = hours > 12 ? hours - 12 : hours;
-                            return `${Math.floor(displayHours).toString().padStart(2, '0')}:${date.getUTCMinutes().toString().padStart(2, '0')} PM`;
-                          })()}</span>
+                          <span>{new Date(match.date_time).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} | {
+                            new Date(match.date_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }).toUpperCase().replace('AM', 'PM')
+                          }</span>
                        </div>
                        <div className="flex items-center text-sm text-gray-600">
                           <MapPin className="w-4 h-4 mr-2 text-gray-400" />
