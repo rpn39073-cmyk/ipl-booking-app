@@ -41,9 +41,13 @@ export default async function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { name: 'Gujarat Titans', slug: 'gujarat-titans', bg: 'bg-gradient-to-br from-blue-800 to-blue-900', color: 'text-white' },
-              { name: 'Kolkata Knight Riders', slug: 'kolkata-knight-riders', bg: 'bg-gradient-to-br from-purple-800 to-purple-900', color: 'text-gold-400 text-yellow-400' },
-              { name: 'Lucknow Super Giants', slug: 'lucknow-super-giants', bg: 'bg-gradient-to-br from-blue-700 to-blue-800', color: 'text-orange-400' },
+              { name: 'Kolkata Knight Riders', slug: 'kolkata-knight-riders', bg: 'bg-gradient-to-br from-purple-800 to-purple-900', color: 'text-yellow-400' },
               { name: 'Mumbai Indians', slug: 'mumbai-indians', bg: 'bg-gradient-to-br from-blue-600 to-blue-800', color: 'text-yellow-400' },
+              { name: 'Chennai Super Kings', slug: 'chennai-super-kings', bg: 'bg-gradient-to-br from-yellow-400 to-yellow-500', color: 'text-blue-900' },
+              { name: 'Royal Challengers Bengaluru', slug: 'royal-challengers-bengaluru', bg: 'bg-gradient-to-br from-red-600 to-red-700', color: 'text-yellow-400' },
+              { name: 'Lucknow Super Giants', slug: 'lucknow-super-giants', bg: 'bg-gradient-to-br from-blue-700 to-blue-800', color: 'text-orange-400' },
+              { name: 'Delhi Capitals', slug: 'delhi-capitals', bg: 'bg-gradient-to-br from-blue-500 to-red-500', color: 'text-white' },
+              { name: 'Rajasthan Royals', slug: 'rajasthan-royals', bg: 'bg-gradient-to-br from-pink-500 to-blue-700', color: 'text-white' },
             ].map((team) => (
               <Link href={`/teams/${team.slug}`} key={team.name} className={`${team.bg} rounded-xl shadow-lg p-6 flex flex-col items-center justify-center aspect-square cursor-pointer transform transition hover:scale-105 hover:shadow-2xl group`}>
                 <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-4 group-hover:scale-110 transition">
