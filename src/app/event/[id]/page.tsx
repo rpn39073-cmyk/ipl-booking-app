@@ -41,8 +41,8 @@ export default async function EventDetails({ params }: { params: Promise<{ id: s
   // Define the event based on DB record or mock fallback
   const event = {
     title: title,
-    date: matchData ? new Date(matchData.date_time).toLocaleDateString('en-US', {weekday:'short', day:'numeric', month:'short', year:'numeric'}) : "Sun 29 Mar 2026",
-    time: matchData ? new Date(matchData.date_time).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}) : "07:30 PM",
+    date: matchData ? new Date(matchData.date_time).toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone: 'Asia/Kolkata'}) : "Sun 29 Mar 2026",
+    time: matchData ? new Date(matchData.date_time).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12: true, timeZone: 'Asia/Kolkata'}) : "07:30 PM",
     duration: "5 Hours",
     language: "Multi",
     location: matchData ? matchData.stadium : "EDEN GARDENS",

@@ -117,7 +117,7 @@ export default async function TeamDetailsPage({ params }: { params: Promise<{ sl
                     <div className="space-y-2">
                        <div className="flex items-center text-sm text-gray-600">
                           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{new Date(match.date_time).toLocaleDateString()} | {new Date(match.date_time).toLocaleTimeString()}</span>
+                          <span>{new Date(match.date_time).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} | {new Date(match.date_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}</span>
                        </div>
                        <div className="flex items-center text-sm text-gray-600">
                           <MapPin className="w-4 h-4 mr-2 text-gray-400" />

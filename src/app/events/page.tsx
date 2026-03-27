@@ -40,7 +40,7 @@ export default async function EventsPage() {
                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg font-bold text-purple-900">{match.team_away.substring(0,3).toUpperCase()}</div>
                   </div>
                   <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-gray-900 tracking-wider">
-                     {new Date(match.date_time).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                     {new Date(match.date_time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
                   </div>
                </div>
                <div className="p-4 flex flex-col flex-grow">
