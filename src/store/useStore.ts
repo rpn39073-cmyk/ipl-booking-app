@@ -53,7 +53,7 @@ export const useStore = create<StoreState>((set, get) => ({
     selectedSeats: state.selectedSeats.filter(s => s.id !== seatId)
   })),
   clearSeats: () => set({ selectedSeats: [] }),
-  ticketLimit: 10, // increased from 1 to allow multiple ticket booking
+  ticketLimit: 100, // Unlimited for manual booking as per user request
   userDetails: null,
   setUserDetails: (details) => set({ userDetails: details }),
 }));

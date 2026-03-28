@@ -114,10 +114,10 @@ export default async function EventDetails({ params }: { params: Promise<{ id: s
 
         {/* Alerts */}
         <div className="space-y-4 mb-8">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3">
-             <AlertTriangle className="text-yellow-600 w-5 h-5 mt-0.5 flex-shrink-0" />
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+             <Info className="text-green-600 w-5 h-5 mt-0.5 flex-shrink-0" />
              <div>
-               <p className="text-yellow-800 font-medium text-sm">Ticket limit for this booking is 1.</p>
+               <p className="text-green-800 font-medium text-sm">Multiple tickets can be booked in a single transaction.</p>
              </div>
           </div>
           

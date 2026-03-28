@@ -6,7 +6,7 @@ import { CheckCircle2, Check, Download, Trophy } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
 export default function ConfirmationPage() {
-  const { selectedSeats, selectedMatch, userDetails } = useStore();
+  const { selectedSeats, selectedMatch, userDetails, ticketPrice } = useStore();
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [email, setEmail] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
@@ -15,9 +15,9 @@ export default function ConfirmationPage() {
   const srNo = "032743";
   const rollNo = "0131";
   const gateNo = "12";
-  const priceBasic = selectedSeats.length > 0 ? (selectedSeats.length * 80 * 0.75).toFixed(2) : "60.00";
-  const tax = selectedSeats.length > 0 ? (selectedSeats.length * 80 * 0.25).toFixed(2) : "20.00";
-  const totalAmount = selectedSeats.length > 0 ? selectedSeats.length * 80 : 80;
+  const priceBasic = selectedSeats.length > 0 ? (selectedSeats.length * ticketPrice * 0.75).toFixed(2) : (ticketPrice * 0.75).toFixed(2);
+  const tax = selectedSeats.length > 0 ? (selectedSeats.length * ticketPrice * 0.25).toFixed(2) : (ticketPrice * 0.25).toFixed(2);
+  const totalAmount = selectedSeats.length > 0 ? selectedSeats.length * ticketPrice : ticketPrice;
 
   const handleSendTicket = () => {
     setEmailStatus('sending');
@@ -148,7 +148,7 @@ export default function ConfirmationPage() {
                      <div className="text-right">
                         <p className="text-[10px] font-bold text-gray-500 uppercase">Row</p>
                         <p className="text-xl font-black text-indigo-950 leading-none">
-                           {selectedSeats[0]?.row_label || 'H'}
+                           {[...new Set(selectedSeats.map(s => s.row_label))].join(', ') || 'H'}
                         </p>
                      </div>
                      <div className="text-right">
