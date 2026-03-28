@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface Seat {
   id: string;
@@ -37,23 +38,30 @@ interface StoreState {
   setUserDetails: (details: UserDetails) => void;
 }
 
-export const useStore = create<StoreState>((set, get) => ({
-  ticketPrice: 500,
-  setTicketPrice: (price) => set({ ticketPrice: price }),
-  selectedMatch: null,
-  setSelectedMatch: (match) => set({ selectedMatch: match }),
-  selectedSeats: [],
-  addSeat: (seat) => {
-    const { selectedSeats, ticketLimit } = get();
-    if (selectedSeats.length < ticketLimit && !selectedSeats.find(s => s.id === seat.id)) {
-      set({ selectedSeats: [...selectedSeats, seat] });
+export const useStore = create<StoreState>()(
+  persist(
+    (set, get) => ({
+      ticketPrice: 500,
+      setTicketPrice: (price) => set({ ticketPrice: price }),
+      selectedMatch: null,
+      setSelectedMatch: (match) => set({ selectedMatch: match }),
+      selectedSeats: [],
+      addSeat: (seat) => {
+        const { selectedSeats, ticketLimit } = get();
+        if (selectedSeats.length < ticketLimit && !selectedSeats.find(s => s.id === seat.id)) {
+          set({ selectedSeats: [...selectedSeats, seat] });
+        }
+      },
+      removeSeat: (seatId) => set((state) => ({
+        selectedSeats: state.selectedSeats.filter(s => s.id !== seatId)
+      })),
+      clearSeats: () => set({ selectedSeats: [] }),
+      ticketLimit: 100, // Unlimited for manual booking as per user request
+      userDetails: null,
+      setUserDetails: (details) => set({ userDetails: details }),
+    }),
+    {
+      name: 'ipl-ticket-storage', // unique name for localStorage key
     }
-  },
-  removeSeat: (seatId) => set((state) => ({
-    selectedSeats: state.selectedSeats.filter(s => s.id !== seatId)
-  })),
-  clearSeats: () => set({ selectedSeats: [] }),
-  ticketLimit: 100, // Unlimited for manual booking as per user request
-  userDetails: null,
-  setUserDetails: (details) => set({ userDetails: details }),
-}));
+  )
+);

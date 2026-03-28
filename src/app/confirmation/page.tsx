@@ -8,7 +8,12 @@ import { useStore } from '@/store/useStore';
 export default function ConfirmationPage() {
   const { selectedSeats, selectedMatch, ticketPrice } = useStore();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const ticketRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Constants to match the physical ticket image
   const srNo = "35401";
@@ -17,38 +22,50 @@ export default function ConfirmationPage() {
   const tax = selectedSeats.length > 0 ? (selectedSeats.length * ticketPrice * 0.25).toFixed(2) : (ticketPrice * 0.25).toFixed(2);
   const totalAmount = selectedSeats.length > 0 ? (selectedSeats.length * ticketPrice).toFixed(2) : ticketPrice.toFixed(2);
 
-  const downloadImage = async () => {
+  const downloadPDF = async () => {
     if (!ticketRef.current) return;
     setIsDownloading(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+      
       const canvas = await html2canvas(ticketRef.current, {
-        scale: 3, // High quality for gallery
+        scale: 2, // Standard high-quality, reduced from 3 to prevent mobile memory crashes
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        logging: false
       });
-      const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `IPL-Ticket-${selectedMatch?.id || '2026'}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      const pdfWidth = ticketRef.current.offsetWidth;
+      const pdfHeight = ticketRef.current.offsetHeight;
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [pdfWidth, pdfHeight]
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`IPL-Ticket-${selectedMatch?.id || '2026'}.pdf`);
+      
     } catch (err) {
       console.error("Failed to download ticket", err);
-      alert("Failed to save ticket. Please try again.");
+      alert("Failed to save PDF. Please try taking a screenshot manually.");
     } finally {
       setIsDownloading(false);
     }
   };
 
-  const matchTitle = selectedMatch ? `${selectedMatch.team_home} VS ${selectedMatch.team_away}`.toUpperCase() : 'KOLKATA KNIGHT RIDERS VS SUNRISERS HYDERABAD';
-  const matchDate = selectedMatch?.date_time 
+  const matchTitle = isMounted && selectedMatch ? `${selectedMatch.team_home} VS ${selectedMatch.team_away}`.toUpperCase() : 'KOLKATA KNIGHT RIDERS VS SUNRISERS HYDERABAD';
+  const matchDate = isMounted && selectedMatch?.date_time 
     ? new Date(selectedMatch.date_time).toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone: 'Asia/Kolkata'}).toUpperCase() + ', ' + new Date(selectedMatch.date_time).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true, timeZone: 'Asia/Kolkata'}).toUpperCase().replace('AM','PM') 
     : 'SATURDAY, 23RD MARCH 2024, 07:30 PM';
-  const matchStadium = selectedMatch?.stadium?.toUpperCase() || 'EDEN GARDENS, KOLKATA';
-  const matchStand = selectedSeats[0]?.stand_id?.toUpperCase() || 'F1 Block - JIO PAVILION';
-  const matchSeats = selectedSeats.length > 0 ? selectedSeats.map(s => s.seat_number).join(',') : '1200';
+  const matchStadium = isMounted && selectedMatch?.stadium?.toUpperCase() ? selectedMatch.stadium.toUpperCase() : 'EDEN GARDENS, KOLKATA';
+  const matchStand = isMounted && selectedSeats[0]?.stand_id?.toUpperCase() ? selectedSeats[0].stand_id.toUpperCase() : 'F1 Block - JIO PAVILION';
+  const matchSeats = isMounted && selectedSeats.length > 0 ? selectedSeats.map(s => s.seat_number).join(',') : '1200';
+  const homeInitials = isMounted && selectedMatch?.team_home ? selectedMatch.team_home.substring(0,3).toUpperCase() : 'KKR';
+  const awayInitials = isMounted && selectedMatch?.team_away ? selectedMatch.team_away.substring(0,3).toUpperCase() : 'SRH';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans pb-20">
@@ -110,13 +127,13 @@ export default function ConfirmationPage() {
                    <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-indigo-900 flex flex-col items-center justify-center shadow-md border-2 border-white">
                          <span className="font-black text-white text-sm">
-                            {selectedMatch?.team_home.substring(0,3).toUpperCase() || 'KKR'}
+                            {homeInitials}
                          </span>
                       </div>
                       <span className="font-black text-gray-400 text-xs">VS</span>
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-orange-600 flex flex-col items-center justify-center shadow-md border-2 border-white">
                          <span className="font-black text-white text-sm">
-                            {selectedMatch?.team_away.substring(0,3).toUpperCase() || 'SRH'}
+                            {awayInitials}
                          </span>
                       </div>
                    </div>
@@ -179,14 +196,14 @@ export default function ConfirmationPage() {
                <Download className="w-5 h-5 mr-2 text-indigo-600" /> Save Offline
             </h3>
             <button 
-               onClick={downloadImage}
-               disabled={isDownloading}
-               className="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-md transition transform active:scale-95 flex justify-center items-center space-x-2"
+               onClick={downloadPDF}
+               disabled={isDownloading || !isMounted}
+               className={`w-full text-white font-bold py-4 rounded-xl shadow-md transition transform active:scale-95 flex justify-center items-center space-x-2 ${isDownloading || !isMounted ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-900 hover:bg-black'}`}
             >
-               <span>{isDownloading ? 'Saving to Gallery...' : 'Download to Gallery (PNG)'}</span>
+               <span>{isDownloading ? 'Downloading PDF...' : 'Download as PDF'}</span>
             </button>
             <p className="text-xs text-center text-gray-500 mt-4 px-2">
-               Save this digital ticket directly to your phone&apos;s gallery and scan the barcode at the gate. No printed copy is required.
+               Save this digital ticket on your phone and scan the barcode at the gate. No printed copy is required.
             </p>
          </div>
 
