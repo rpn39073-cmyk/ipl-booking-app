@@ -37,7 +37,7 @@ export default function SeatGrid({ standName }: { standName: string }) {
       if (selectedSeats.length < ticketLimit) {
         addSeat({ ...seat, stand_id: standName, status: 'Selected' });
       } else {
-        alert(`You can only select up to ${ticketLimit} seat(s).`);
+        alert(`You can select up to ${ticketLimit} seats for this booking.`);
       }
     }
   };
