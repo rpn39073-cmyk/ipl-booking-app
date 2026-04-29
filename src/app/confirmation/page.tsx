@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import { CheckCircle2, Download, Trophy } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
@@ -27,7 +28,6 @@ export default function ConfirmationPage() {
     setIsDownloading(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
       
       const canvas = await html2canvas(ticketRef.current, {
         scale: 2, // Standard high-quality, reduced from 3 to prevent mobile memory crashes
@@ -39,6 +39,11 @@ export default function ConfirmationPage() {
       const imgData = canvas.toDataURL('image/png', 1.0);
       const pdfWidth = ticketRef.current.offsetWidth;
       const pdfHeight = ticketRef.current.offsetHeight;
+      
+      if (!(window as any).jspdf) {
+         throw new Error("jsPDF library not loaded yet.");
+      }
+      const { jsPDF } = (window as any).jspdf;
       
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -69,6 +74,7 @@ export default function ConfirmationPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans pb-20">
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" strategy="lazyOnload" />
       <div className="max-w-md mx-auto w-full p-4 mt-8 flex flex-col gap-6">
          
          <div className="bg-emerald-600 rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
